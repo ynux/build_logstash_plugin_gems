@@ -1,0 +1,22 @@
+#
+# Build the logstash-filter-translate gem 
+# 2015.07.21   	S.Kim
+#               using official docker repo java image
+# 		To get your gem: While docker run -it <image> is running, find you container_id with docker ps, 
+#  		and do "docker cp <container_id>:/logstash-filter-translate/logstash-filter-translate-0.1.9.gem ."
+# 
+# Pull base image, https://registry.hub.docker.com/_/java/, openjdk
+FROM java:8
+
+RUN \
+	apt-get install -y curl git && \
+	command curl -sSL https://rvm.io/mpapis.asc | gpg --import - && \
+	curl -sSL https://get.rvm.io | bash -s stable --ruby=jruby && \
+	/bin/bash -c "source /etc/profile.d/rvm.sh; source  /usr/local/rvm/scripts/rvm; ruby -v > /root/rubyversion" && \
+	/bin/bash -c "echo \"export rvm_max_time_flag=20\" >> ~/.rvmrc; source /etc/profile.d/rvm.sh; gem install bundler" 
+RUN git clone https://github.com/logstash-plugins/logstash-filter-translate.git && \
+	cd logstash-filter-translate && \
+        /bin/bash -c "source /etc/profile.d/rvm.sh; gem build logstash-filter-translate.gemspec"
+
+# Define default command.
+CMD ["bash"]
