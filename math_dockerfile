@@ -1,0 +1,23 @@
+#
+# Build the logstash-filter-math gem Dockerfile, from robin13's project
+# 2015.06.19   	S.Kim
+
+# To get your gem: docker run -d --name math-gem <image_name> --name 
+#                  docker cp math-gem:/logstash-filter-math/logstash-filter-math-0.1.gem
+
+# Pull base image, https://registry.hub.docker.com/_/java/, openjdk
+FROM java:8
+
+RUN \
+	apt-get install -y curl git && \
+	command curl -sSL https://rvm.io/mpapis.asc | gpg --import - && \
+	curl -sSL https://get.rvm.io | bash -s stable --ruby=jruby && \
+	/bin/bash -c "source /etc/profile.d/rvm.sh; source  /usr/local/rvm/scripts/rvm; ruby -v > /root/rubyversion" && \
+	/bin/bash -c "echo \"export rvm_max_time_flag=20\" >> ~/.rvmrc; source /etc/profile.d/rvm.sh; gem install bundler" 
+RUN git clone https://github.com/robin13/logstash-filter-math.git && \
+	cd logstash-filter-math && \
+        /bin/bash -c "source /etc/profile.d/rvm.sh; gem build logstash-filter-math.gemspec | tee -a gem_build.log"
+
+# Define default command. We are done, but to keep the container up, let's do something stupid.
+CMD ["tail","-f","logstash-filter-math/gem_build.log"]
+
